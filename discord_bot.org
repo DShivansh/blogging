@@ -1,3 +1,4 @@
+#+PROPERTY: export:both
 * Making A Discord Bot To Monitor a Website and speak about that in Voice Channel.
 Ever wondered that would't it be easier if Instead of monitoring a website some times in a day for some changes. Some sort of bot does the job of monitoring for you and notifies you when the condition is met. Yooohooo......you are in luck because in this tutorial I am going to teach you how to make a discord bot that monitors a website here I am going to be looking at a stocks website and keep a watch on stocks and whenever any stock's volume goes above 100,000 my bot would say the name of the stock.
 ** Requirements
@@ -51,16 +52,16 @@ First we will begin by importing different libraries required for scraping the w
 *selenium* webdriver is basically the meat of the progarm it does all the work from opening the browser and getting us the values.
 *pickle* is used to save the stock names whoes values went up by 100,000 to array and then dump it into the harddisk so that it can be converted to voice.
 
-#+begin_scr python
+#+begin_src python
 import time
 import selenium.webdriver
 from selenium.webdriver.common.keys import Keys  
 from selenium.webdriver.chrome.options import Options  
 import pickle
-#+end_scr
+#+end_src
 
 The function below basically opens the browser in the headless mode and then wait for 5 seconds
-#+begin_scr python
+#+begin_src python
 
 def get_arr():
     chrome_opt = Options()  
@@ -69,9 +70,9 @@ def get_arr():
     driver = selenium.webdriver.Chrome(executable_path="./chromedriver", options=chrome_opt)
     driver.get('https://www.barchart.com/stocks/most-active/volume-advances?page=all')
     time.sleep(5) #make the main thread sleep for 5 sec
-#+end_scr
+#+end_src
 Now we create a dictionary named *temp_dict* that will store the stock name along with their volumes as the key value pairs to compare them from older values, Now we will iterate over all the elements using xpath and string interpolation to get the stocks and their volume and put them as key value pairs in the dictionary.
-#+begin_scr python
+#+begin_src python
     temp_dict = {}
     for i in range(1, 201):
         elem = driver.find_element_by_xpath(f'//*[@id="main-content-column"]/div/div[5]/div/div[2]/div/div/ng-transclude/table/tbody/tr[{i}]/td[1]/div/span[2]/a') # getting an element by xpath
@@ -82,10 +83,10 @@ Now we create a dictionary named *temp_dict* that will store the stock name alon
         data_v = int(data_v.replace(',', ''))
         temp_dict[data] = data_v
 
-#+end_scr
+#+end_src
 Here we load the previos dictionary form the hard-disk and then we will compare the old value with new value to check the difference in the volume, and if the volume is greater then we place the stock in the array, before checking the difference we replace the old dictionary with the current dictionary that we have made so that we can use it in future.
 Now we return the array containing the names of the stocks and that array is also pickeled to the hard-drive.
-#+begin_scr python
+#+begin_src python
 
     if not os.path.isfile('./data.pkl'):
         with open("data.pkl", "wb") as f:
@@ -114,11 +115,11 @@ if __name__ == "__main__":
         pickle.dump(data_got, f)
     print("yo")
 
-#+end_scr
+#+end_src
 
 * Creating mp3 
 Now we will be using the pickeled array and convert the text into voice and store it to the sound folder these are the sounds that will be said by our bot in the voice app.
-#+begin_scr python
+#+begin_src python
 import time
 import pyttsx3
 from queue import Queue
@@ -131,9 +132,9 @@ if __name__ == "__main__":
     engine.startLoop(False)
     with open("data_arr.pkl", "rb") as f:
         arr = pickle.load(f)
-#+end_scr
+#+end_src
 Iterating over the pickeled array and getting the names of the stock and then storing the sound as mp3 inside the folder named sound.
-#+begin_scr python
+#+begin_src python
         
     for i in arr:
         if not os.path.exists(f'./sound/{i}.mp3'):
@@ -142,12 +143,12 @@ Iterating over the pickeled array and getting the names of the stock and then st
             print(i)
             time.sleep(4)
 
-#+end_scr
+#+end_src
 
    
 * Writing the Discord bot
 Here I have created an instance of the discord bot.
-#+begin_scr python
+#+begin_src python
 import discord
 from discord.ext import commands, tasks
 import asyncio
@@ -158,9 +159,9 @@ import pyttsx3
 import sys
 import os
 client = discord.Client()
-#+end_scr
+#+end_src
 Loading the pickeled array into the memory of program so that it can say the sounds in the voice channel.
-#+begin_scr python
+#+begin_src python
 
 async def joinVoiceChannel():
     channel = client.get_channel(<ID of your discord bot>)
@@ -168,9 +169,9 @@ async def joinVoiceChannel():
         arr = pickle.load(f)
     if(len(arr) >= 1):
         print("size of the array is ", len(arr))
-#+end_scr
+#+end_src
 Now one of the main problems that was occuring was that since whole discord api is basically asynchronous I had to think a way to say the names of the sounds sequentially inside that of the voice channel. Here comes recursion super-power so whenever I played a sound the discord api provided me with the after call back and in that call back I called the same function but the array size was reduced by one and when the size became 0 I returned out of the play nex function.
-#+begin_scr python
+#+begin_src python
         
         def play_next(arr):
             if len(arr) >= 1:
@@ -183,9 +184,9 @@ Now one of the main problems that was occuring was that since whole discord api 
         voice.play(discord.FFmpegPCMAudio(f'./sound/{arr[0]}.mp3'), after=lambda e: play_next(arr[1:]))
     else:
         print("array size 0")
-#+end_scr
+#+end_src
 on_ready function basically calls the joinVoiceChannel after the bot has successfully joined the server.
-#+begin_scr python
+#+begin_src python
         
 
 @client.event
@@ -197,21 +198,21 @@ if(__name__ == '__main__'):
     client.run(<o-auth token of your server>)
 
 
-#+end_scr
+#+end_src
 * Writing a manager or glue that co-ordintates all these different workings
 I had to do this because if I would have called different functions from the bot python script then the async-io used to die hence I had to run different functions as a subprocess.
 In The Code below I am basically importing various libraries and then setting the format of the logging, I had to setup the logging since this script will be infinetly running and if some error occured it would be easier to debug.
-#+begin_scr python
+#+begin_src python
 import subprocess
 import time
 import logging
 FORMAT = "%(asctime)-15s %(message)s"
 logging.basicConfig(format=FORMAT,level=logging.INFO,datefmt='%Y-%m-%d %H:%M:%S', filename='application.log')
-#+end_scr
+#+end_src
 Now the code below calls scraping, convert_to_mp3, bot scripts one by one.
 I the bot script I have set the timeout timer to be of 900 seconds after that the subprocess automatically gets stopped. 
 And in the finally block I am basically making sure that *each cycle in while loop takes 20 minutes to complete*, hence I am waiting for 200 - total time taken to run all the scripts.
-#+begin_scr python
+#+begin_src python
 
 while True:
     start = time.time()
@@ -238,4 +239,4 @@ while True:
     finally:
         time.sleep(abs(1200 - total_time))
 
-#+end_scr
+#+end_src
