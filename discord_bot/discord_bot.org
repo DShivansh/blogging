@@ -1,6 +1,6 @@
 #+PROPERTY: export:both
 * Making A Discord Bot To Monitor a Website and speak about that in Voice Channel.
-Ever wondered that would't it be easier if Instead of monitoring a website some times in a day for some changes. Some sort of bot does the job of monitoring for you and notifies you when the condition is met. Yooohooo......you are in luck because in this tutorial I am going to teach you how to make a discord bot that monitors a website here I am going to be looking at a stocks website and keep a watch on stocks and whenever any stock's volume goes above 100,000 my bot would say the name of the stock.
+Ever wondered that wouldn't it be easier if Instead of monitoring a website some times in a day for some changes. Some sort of bot does the job of monitoring for you and notifies you when the condition is met. Yooohooo......you are in luck because in this tutorial I am going to teach you how to make a discord bot that monitors a website here I am going to be looking at a stocks website and keep a watch on stocks and whenever any stock's volume goes above 100,000 my bot would say the name of the stock.
 ** Requirements
 1) [[https://www.python.org/][Python3]]
 2) [[https://chromedriver.chromium.org/downloads][Selenium Web Driver]]
@@ -38,19 +38,19 @@ Ever wondered that would't it be easier if Instead of monitoring a website some 
 30) wrapt==1.12.1
 31) arl==1.5.1
 * Project outline
-So let us first start with outlining the project so every one has clear Idea as to what are we intending to do. So we'll be doing the following steps in order.
-1)Create a scaper to scrape the website after every 20 minutes to check for updates
+So let us first start with outlining the project so everyone has a clear Idea as to what are we intending to do. So we'll be doing the following steps in order.
+1)Create a scraper to scrape the website after every 20 minutes to check for updates
 web do this after every 20 minutes in order to prevent us from getting blocked.
 2) Write a script to convert the name to voice that our discord bot will say to us.
-3) Write a manager file that will basically mange the running of these different files.
+3) Write a manager file that will basically manage the running of these different files.
 
 * Scraper
-In the scraper we will be using the headless chrome webbrowser and then use the xpath to access the stock and its volume since xpath of various stock names and their volume differed by only the number in the xpath we used string interpolation to manipulate the xpath.
-xpath can be accessed by inspecting the element in chrome and right click the element in chrome and then select copy relative xpath in chrome.
+In the scraper, we will be using the headless chrome web browser and then use the XPath to access the stock and its volume since XPath of various stock names and their volume differed by only the number in the XPath we used string interpolation to manipulate the XPath.
+XPath can be accessed by inspecting the element in chrome and right-click the element in chrome and then select copy relative XPath in chrome.
 [[./xpath-use.png]]
-First we will begin by importing different libraries required for scraping the website https://www.barchart.com/stocks/most-active/volume-advances?page=all here we imported *time* so that we can stop the execution of the code for sometimes to allow the site to first load in the browser then start scraping it.
-*selenium* webdriver is basically the meat of the progarm it does all the work from opening the browser and getting us the values.
-*pickle* is used to save the stock names whoes values went up by 100,000 to array and then dump it into the harddisk so that it can be converted to voice.
+First, we will begin by importing different libraries required for scraping the website https://www.barchart.com/stocks/most-active/volume-advances?page=all here we imported *time* so that we can stop the execution of the code for sometimes to allow the site to first load in the browser then start scraping it.
+*selenium* webdriver is the meat of the program it does all the work from opening the browser and getting us the values.
+*pickle* is used to save the stock names whose values went up by 100,000 to an array and then dump it into the hard disk so that it can be converted to voice.
 
 #+begin_src python
 import time
@@ -84,8 +84,8 @@ Now we create a dictionary named *temp_dict* that will store the stock name alon
         temp_dict[data] = data_v
 
 #+end_src
-Here we load the previos dictionary form the hard-disk and then we will compare the old value with new value to check the difference in the volume, and if the volume is greater then we place the stock in the array, before checking the difference we replace the old dictionary with the current dictionary that we have made so that we can use it in future.
-Now we return the array containing the names of the stocks and that array is also pickeled to the hard-drive.
+Here we load the previous dictionary form the hard-disk and then we will compare the old value with the new value to check the difference in the volume, and if the volume is greater then we place the stock in the array, before checking the difference we replace the old dictionary with the current dictionary that we have made so that we can use it in future.
+Now we return the array containing the names of the stocks and that array is also pickled to the hard-drive.
 #+begin_src python
 
     if not os.path.isfile('./data.pkl'):
@@ -118,7 +118,7 @@ if __name__ == "__main__":
 #+end_src
 
 * Creating mp3 
-Now we will be using the pickeled array and convert the text into voice and store it to the sound folder these are the sounds that will be said by our bot in the voice app.
+Now we will be using the pickled array and convert the text into voice and store it in the sound folder these are the sounds that will be said by our bot in the voice app.
 #+begin_src python
 import time
 import pyttsx3
@@ -160,7 +160,7 @@ import sys
 import os
 client = discord.Client()
 #+end_src
-Loading the pickeled array into the memory of program so that it can say the sounds in the voice channel.
+Loading the pickled array into the memory of the program so that it can say the sounds in the voice channel.
 #+begin_src python
 
 async def joinVoiceChannel():
@@ -170,7 +170,7 @@ async def joinVoiceChannel():
     if(len(arr) >= 1):
         print("size of the array is ", len(arr))
 #+end_src
-Now one of the main problems that was occuring was that since whole discord api is basically asynchronous I had to think a way to say the names of the sounds sequentially inside that of the voice channel. Here comes recursion super-power so whenever I played a sound the discord api provided me with the after call back and in that call back I called the same function but the array size was reduced by one and when the size became 0 I returned out of the play nex function.
+Now one of the main problems that were occurring was that since the whole discord API is basically asynchronous I had to think of a way to say the names of the sounds sequentially inside that of the voice channel. Here comes recursion super-power so whenever I played a sound the discord API provided me with the after call back and in that call back I called the same function but the array size was reduced by one and when the size became 0 I returned out of the play next function.
 #+begin_src python
         
         def play_next(arr):
@@ -199,9 +199,9 @@ if(__name__ == '__main__'):
 
 
 #+end_src
-* Writing a manager or glue that co-ordintates all these different workings
+* Writing a manager or glue that co-ordinates all these different workings
 I had to do this because if I would have called different functions from the bot python script then the async-io used to die hence I had to run different functions as a subprocess.
-In The Code below I am basically importing various libraries and then setting the format of the logging, I had to setup the logging since this script will be infinetly running and if some error occured it would be easier to debug.
+In The Code below I am basically importing various libraries and then set the format of the logging, I had to set up the logging since this script will be infinitely running and if some error occurred it would be easier to debug.
 #+begin_src python
 import subprocess
 import time
